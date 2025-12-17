@@ -55,6 +55,12 @@ canvas { background: #fff; border: 1px solid #e8eef6; border-radius:6px; transit
 #tutorialOverlay .button { min-width: 120px; }
 #tutorialOverlay .title { margin-bottom: 0.25rem; }
 
+/* Rainbow simulator UI */
+.legend { color: var(--muted); font-size: 0.95rem; }
+.loader { width:14px;height:14px;border-radius:50%;border:2px solid rgba(0,0,0,0.08);border-top-color:#4e79a7;animation: spin 900ms linear infinite }
+@keyframes spin { to { transform: rotate(360deg); } }
+#rainbowSummary { color: var(--text); }
+
 /* Tooltip styling */
 .tooltip {
   display: inline-block;

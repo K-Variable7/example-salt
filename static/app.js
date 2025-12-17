@@ -713,6 +713,10 @@ async function runRainbowSimulator() {
   try {
     out.innerHTML = '<em>Running rainbow-table simulation...</em>';
 
+    // Show spinner
+    const spinner = document.getElementById('rainbowSpinner');
+    if (spinner) { spinner.style.display = 'inline-block'; spinner.setAttribute('aria-hidden','false'); }
+
     // ensure rainbowMap loaded if requested
     let loaded = true;
     if (usePre && rainbowMap.size === 0) {
@@ -758,6 +762,12 @@ async function runRainbowSimulator() {
       <p><strong style="color:green">Salted (instant cracks using precomputed table):</strong> ${crackedSaltedUsers}</p>
       <p><small>${usePre ? (loaded ? 'Using precomputed list of common passwords.' : 'Precomputed list failed to load — using small fallback list.') : 'Not using precomputed table (no instant cracks).'} </small></p>`;
 
+    // Update summary counts and chart
+    const instantEl = document.getElementById('rainbowInstantCount');
+    const saltedEl = document.getElementById('rainbowSaltedCount');
+    if (instantEl) instantEl.textContent = String(crackedUnsaltedUsers);
+    if (saltedEl) saltedEl.textContent = String(crackedSaltedUsers);
+
     if (!rainbowChart) initRainbowChart();
     rainbowChart.data.datasets[0].data = [crackedUnsaltedUsers];
     rainbowChart.data.datasets[1].data = [crackedSaltedUsers];
@@ -766,6 +776,9 @@ async function runRainbowSimulator() {
     out.innerHTML = `<p style="color:orange">Simulation failed: ${e}</p>`;
     if (statusEl) statusEl.textContent = 'Simulation failed';
   } finally {
+    // Hide spinner and re-enable button
+    const spinner = document.getElementById('rainbowSpinner');
+    if (spinner) { spinner.style.display = 'none'; spinner.setAttribute('aria-hidden', 'true'); }
     btn.disabled = false;
   }
 }
