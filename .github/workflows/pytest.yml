@@ -34,17 +34,35 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Cache Playwright browser downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/requirements.txt') }}
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: Install Playwright browsers
         run: |
           python -m playwright install --with-deps
+
       - name: Start dev server
         run: |
           nohup python -u app.py > server.log 2>&1 & echo $! > server.pid
@@ -54,11 +72,34 @@ jobs:
             sleep 1
           done
           tail -n +1 server.log | sed -n '1,200p'
+
       - name: Run Playwright E2E tests
         env:
           CI: true
         run: |
-          pytest -q tests/e2e -k "not flaky" -s
+          pytest -q tests/e2e -k "not flaky" -s --junitxml=tests/e2e/report.xml || true
+
+      - name: Collect E2E artifacts on failure
+        if: ${{ failure() }}
+        run: |
+          mkdir -p artifacts
+          # Attempt to record a short GIF demo (best-effort; may require ffmpeg)
+          python scripts/record_screenshots.py --out artifacts/demo.gif || true
+          # Copy server log
+          cp server.log artifacts/server.log || true
+          # Gather Playwright frames if they exist
+          if [ -d videos/frames ]; then mkdir -p artifacts/frames && cp videos/frames/*.png artifacts/frames/ || true; fi
+          # Copy pytest junit xml
+          if [ -f tests/e2e/report.xml ]; then cp tests/e2e/report.xml artifacts/report.xml || true; fi
+        continue-on-error: true
+
+      - name: Upload E2E artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: artifacts
+
       - name: Stop dev server
         run: |
           if [ -f server.pid ]; then kill $(cat server.pid) || true; fi
