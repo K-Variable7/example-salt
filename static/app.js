@@ -119,6 +119,13 @@ const strengthValue = document.getElementById('strengthValue');
 const demoResults = document.getElementById('demoResults');
 const resultsDiv = document.getElementById('results');
 const useArgonLocal = document.getElementById('useArgonLocal');
+const useBcryptLocal = document.getElementById('useBcryptLocal');
+const bcryptRounds = document.getElementById('bcryptRounds');
+const useScryptLocal = document.getElementById('useScryptLocal');
+const scryptN = document.getElementById('scryptN');
+const scryptR = document.getElementById('scryptR');
+const scryptP = document.getElementById('scryptP');
+const kdfStatus = document.getElementById('kdfStatus');
 const argonTime = document.getElementById('argonTime');
 const argonMem = document.getElementById('argonMem');
 const argonParallel = document.getElementById('argonParallel');
@@ -171,6 +178,42 @@ async function loadArgon2() {
       _argonLoading = false;
       reject(new Error('Failed to load Argon2 script'));
     };
+    document.head.appendChild(s);
+  });
+}
+
+// Lazy-load bcrypt.js (fast to load, pure JS) from CDN
+let _bcryptLoading = false;
+async function loadBcrypt() {
+  if (window.bcrypt) return window.bcrypt;
+  if (_bcryptLoading) {
+    while (!window.bcrypt) await new Promise(r => setTimeout(r,50));
+    return window.bcrypt;
+  }
+  _bcryptLoading = true;
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js';
+    s.onload = () => { _bcryptLoading = false; resolve(window.dcodeIO && window.dcodeIO.bcrypt ? window.dcodeIO.bcrypt : window.bcrypt); };
+    s.onerror = (e) => { _bcryptLoading = false; reject(new Error('Failed to load bcrypt.js')); };
+    document.head.appendChild(s);
+  });
+}
+
+// Lazy-load scrypt-async (npm: scrypt-async) for demo scrypt computation
+let _scryptLoading = false;
+async function loadScrypt() {
+  if (window.scrypt) return window.scrypt;
+  if (_scryptLoading) {
+    while (!window.scrypt) await new Promise(r => setTimeout(r,50));
+    return window.scrypt;
+  }
+  _scryptLoading = true;
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/scrypt-async@2.0.3/scrypt-async.min.js';
+    s.onload = () => { _scryptLoading = false; if (window.scrypt) resolve(window.scrypt); else resolve(window.scrypt); };
+    s.onerror = (e) => { _scryptLoading = false; reject(new Error('Failed to load scrypt-async')); };
     document.head.appendChild(s);
   });
 }
@@ -265,52 +308,108 @@ async function runDemo() {
       <p>${rainbowHit ? '<strong style="color:red">Unsalted hash found in precomputed table (instant crack)</strong>' : 'Not found in small demo rainbow table.'}</p>
     `;
 
-    // If Argon2 local is requested and Local-only enabled, run Argon2 in the browser
-    if (localOnly.checked && useArgonLocal && useArgonLocal.checked) {
+    // Client-side KDFs: Argon2, bcrypt, scrypt (when Local-only is enabled and selected)
+    if (localOnly.checked && ( (useArgonLocal && useArgonLocal.checked) || (useBcryptLocal && useBcryptLocal.checked) || (useScryptLocal && useScryptLocal.checked) )) {
       try {
-        const argTime = Math.max(1, parseInt(argonTime.value || '2', 10));
-        const argMem = Math.max(8, parseInt(argonMem.value || '65536', 10));
-        const argParallel = Math.max(1, parseInt(argonParallel.value || '1', 10));
+        // Argon2 branch
+        if (useArgonLocal && useArgonLocal.checked) {
+          const argTime = Math.max(1, parseInt(argonTime.value || '2', 10));
+          const argMem = Math.max(8, parseInt(argonMem.value || '65536', 10));
+          const argParallel = Math.max(1, parseInt(argonParallel.value || '1', 10));
+          const warnMemKB = 262144;
+          if (argMem > warnMemKB) {
+            const ok = await showConfirmModal(`Argon2 memory set to ${humanizeBytes(argMem*1024)} which is high and may make your browser unresponsive. Proceed?`);
+            if (!ok) {
+              out.innerHTML += `<p style="color:orange">Argon2 cancelled by user due to high resource request.</p>`;
+              argonStatus.textContent = 'Argon2 cancelled by user';
+              updateCharts(timeSec, new Set(unsaltedList).size, new Set(saltedList.map(s=>s.salted_sha)).size);
+              demoResults.innerHTML = '';
+              demoResults.appendChild(out);
+              return;
+            }
+          }
+          argonStatus.textContent = 'Loading Argon2...';
+          const argon = await loadArgon2();
+          argonStatus.textContent = 'Computing Argon2...';
+          const startA = performance.now();
+          const argRes = await argon.hash({ pass: pwd, salt: hexToBuf(saltHex), time: argTime, mem: argMem, parallelism: argParallel, hashLen: 32, type: argon.ArgonType.Argon2id });
+          const endA = performance.now();
+          const argonSec = (endA - startA) / 1000;
+          argonStatus.textContent = `Argon2 computed in ${argonSec.toFixed(2)}s`;
+          out.innerHTML += `<p><strong>Local Argon2 (encoded):</strong> <pre>${argRes.encoded || ''}</pre></p>`;
+          out.innerHTML += `<p><strong>Local Argon2 (hex):</strong> <pre>${argRes.hashHex || (argRes.hash ? bufToHex(argRes.hash) : '')}</pre></p>`;
+          const guessesArgon = Math.pow(2, estimateEntropyBits(pwd) || 1);
+          const timeSecArgon = guessesArgon * argonSec;
+          out.innerHTML += `<p><strong>Estimated crack time (using Argon2 per-guess cost):</strong> ${prettyTimeSeconds(timeSecArgon)}</p>`;
+          updateCharts(timeSecArgon, new Set(unsaltedList).size, new Set(saltedList.map(s=>s.salted_sha)).size);
+        }
 
-        // warn if resources are high (e.g., mem > 262144 KB = 256MB)
-        const warnMemKB = 262144;
-        if (argMem > warnMemKB) {
-          const ok = await showConfirmModal(`Argon2 memory set to ${humanizeBytes(argMem*1024)} which is high and may make your browser unresponsive. Proceed?`);
-          if (!ok) {
-            out.innerHTML += `<p style="color:orange">Argon2 cancelled by user due to high resource request.</p>`;
-            argonStatus.textContent = 'Argon2 cancelled by user';
-            updateCharts(timeSec, new Set(unsaltedList).size, new Set(saltedList.map(s=>s.salted_sha)).size);
-            demoResults.innerHTML = '';
-            demoResults.appendChild(out);
-            return;
+        // bcrypt branch
+        if (useBcryptLocal && useBcryptLocal.checked) {
+          try {
+            kdfStatus.textContent = 'Loading bcrypt...';
+            const bcrypt = await loadBcrypt();
+            kdfStatus.textContent = 'Computing bcrypt...';
+            const rounds = Math.max(4, Math.min(15, parseInt(bcryptRounds.value || '10', 10)));
+            const startB = performance.now();
+            const hashed = await new Promise((resolve, reject) => {
+              bcrypt.hash(pwd, rounds, (err, hash) => { if (err) reject(err); else resolve(hash); });
+            });
+            const endB = performance.now();
+            const bcryptSec = (endB - startB) / 1000;
+            kdfStatus.textContent = `bcrypt computed in ${bcryptSec.toFixed(2)}s (rounds=${rounds})`;
+            out.innerHTML += `<p><strong>Local bcrypt:</strong> <pre>${hashed}</pre></p>`;
+            const guessesBcrypt = Math.pow(2, estimateEntropyBits(pwd) || 1);
+            out.innerHTML += `<p><strong>Estimated crack time (bcrypt per-guess cost):</strong> ${prettyTimeSeconds(guessesBcrypt * bcryptSec)}</p>`;
+            updateCharts(guessesBcrypt * bcryptSec, new Set(unsaltedList).size, new Set(saltedList.map(s=>s.salted_sha)).size);
+          } catch (e) {
+            kdfStatus.textContent = 'bcrypt failed: ' + e;
+            out.innerHTML += `<p style="color:orange">bcrypt error: ${e}</p>`;
           }
         }
 
-        argonStatus.textContent = 'Loading Argon2...';
-        const argon = await loadArgon2();
-        argonStatus.textContent = 'Computing Argon2...';
-        const startA = performance.now();
-        const argRes = await argon.hash({ pass: pwd, salt: hexToBuf(saltHex), time: argTime, mem: argMem, parallelism: argParallel, hashLen: 32, type: argon.ArgonType.Argon2id });
-        const endA = performance.now();
-        const argonSec = (endA - startA) / 1000;
-        argonStatus.textContent = `Argon2 computed in ${argonSec.toFixed(2)}s`;
-        out.innerHTML += `<p><strong>Local Argon2 (encoded):</strong> <pre>${argRes.encoded || ''}</pre></p>`;
-        out.innerHTML += `<p><strong>Local Argon2 (hex):</strong> <pre>${argRes.hashHex || (argRes.hash ? bufToHex(argRes.hash) : '')}</pre></p>`;
+        // scrypt branch
+        if (useScryptLocal && useScryptLocal.checked) {
+          try {
+            kdfStatus.textContent = 'Loading scrypt...';
+            await loadScrypt();
+            kdfStatus.textContent = 'Computing scrypt...';
+            const N = Math.max(1024, parseInt(scryptN.value || '16384', 10));
+            const r = Math.max(1, parseInt(scryptR.value || '8', 10));
+            const p = Math.max(1, parseInt(scryptP.value || '1', 10));
+            const startS = performance.now();
+            const saltBuf = hexToBuf(saltHex);
+            const dkLen = 32;
+            const scryptAsync = window.scrypt;
+            const derived = await new Promise((resolve, reject) => {
+              try {
+                scryptAsync(pwd, saltBuf, { N: N, r: r, p: p, dkLen: dkLen }, (derivedKey) => {
+                  resolve(derivedKey);
+                });
+              } catch (err) { reject(err); }
+            });
+            const endS = performance.now();
+            const scryptSec = (endS - startS) / 1000;
+            kdfStatus.textContent = `scrypt computed in ${scryptSec.toFixed(2)}s (N=${N}, r=${r}, p=${p})`;
+            let hex = '';
+            if (derived && derived.length) {
+              hex = bufToHex(derived instanceof Uint8Array ? derived : new Uint8Array(derived));
+            }
+            out.innerHTML += `<p><strong>Local scrypt (hex):</strong> <pre>${hex}</pre></p>`;
+            const guessesScrypt = Math.pow(2, estimateEntropyBits(pwd) || 1);
+            out.innerHTML += `<p><strong>Estimated crack time (scrypt per-guess cost):</strong> ${prettyTimeSeconds(guessesScrypt * scryptSec)}</p>`;
+            updateCharts(guessesScrypt * scryptSec, new Set(unsaltedList).size, new Set(saltedList.map(s=>s.salted_sha)).size);
+          } catch (e) {
+            kdfStatus.textContent = 'scrypt failed: ' + e;
+            out.innerHTML += `<p style="color:orange">scrypt error: ${e}</p>`;
+          }
+        }
 
-        // Update crack time estimate using measured Argon2 time as per-guess cost
-        const guessesArgon = Math.pow(2, estimateEntropyBits(pwd) || 1);
-        const timeSecArgon = guessesArgon * argonSec;
-        out.innerHTML += `<p><strong>Estimated crack time (using Argon2 per-guess cost):</strong> ${prettyTimeSeconds(timeSecArgon)}</p>`;
-
-        updateCharts(timeSecArgon, new Set(unsaltedList).size, new Set(saltedList.map(s=>s.salted_sha)).size);
+        // show result with animation
+        out.classList.add('fade-in');
       } catch (e) {
-        argonStatus.textContent = 'Argon2 failed: ' + e;
-        out.innerHTML += `<p style="color:orange">Argon2 error: ${e}</p>`;
-        updateCharts(timeSec, new Set(unsaltedList).size, new Set(saltedList.map(s=>s.salted_sha)).size);
+        out.innerHTML += `<p style="color:orange">KDF computation failed: ${e}</p>`;
       }
-
-      // show result with animation
-      out.classList.add('fade-in');
     } else {
       // fallback: show server Argon2 if local-only is disabled
       if (!localOnly.checked) {

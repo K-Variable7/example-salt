@@ -68,6 +68,13 @@
                 <label class="checkbox"><input id="useArgonLocal" type="checkbox"> Use Argon2 (local)</label>
               </div>
 
+              <div class="control">
+                <label class="checkbox"><input id="useBcryptLocal" type="checkbox"> Use bcrypt (local)</label>
+              </div>
+              <div class="control">
+                <label class="checkbox"><input id="useScryptLocal" type="checkbox"> Use scrypt (local)</label>
+              </div>
+
             </div>
 
             <div class="field is-grouped is-align-items-center">
@@ -85,6 +92,25 @@
               </div>
               <div class="control">
                 <p id="argonStatus" class="has-text-grey"></p>
+              </div>
+              <div class="control">
+                <label class="label">bcrypt rounds</label>
+                <input id="bcryptRounds" class="input" type="number" min="4" max="15" value="10" style="width:5rem" />
+              </div>
+              <div class="control">
+                <label class="label">scrypt N</label>
+                <input id="scryptN" class="input" type="number" min="1024" value="16384" style="width:8rem" />
+              </div>
+              <div class="control">
+                <label class="label">scrypt r</label>
+                <input id="scryptR" class="input" type="number" min="1" value="8" style="width:4rem" />
+              </div>
+              <div class="control">
+                <label class="label">scrypt p</label>
+                <input id="scryptP" class="input" type="number" min="1" value="1" style="width:4rem" />
+              </div>
+              <div class="control">
+                <p id="kdfStatus" class="has-text-grey"></p>
               </div>
             </div>
 
