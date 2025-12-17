@@ -64,6 +64,23 @@ function generatePassword(len = 16) {
   return Array.from(arr).map((v,i) => chars[v % chars.length]).join('');
 }
 
+// Initialize accessible tooltips: set aria-hidden and toggle on hover/focus
+function initTooltips() {
+  const tooltips = document.querySelectorAll('.tooltip');
+  tooltips.forEach(t => {
+    const tip = t.querySelector('.tooltip-text');
+    if (!tip) return;
+    tip.setAttribute('aria-hidden', 'true');
+    t.addEventListener('mouseenter', () => tip.setAttribute('aria-hidden', 'false'));
+    t.addEventListener('mouseleave', () => tip.setAttribute('aria-hidden', 'true'));
+    t.addEventListener('focusin', () => tip.setAttribute('aria-hidden', 'false'));
+    t.addEventListener('focusout', () => tip.setAttribute('aria-hidden', 'true'));
+  });
+}
+
+// Run tooltip init after DOM ready (script loaded at end of body)
+try { initTooltips(); } catch (e) { /* non-fatal */ }
+
 // Demo data
 const sampleRainbow = ['password','123456','qwerty','letmein','12345678','password1'];
 
@@ -677,7 +694,22 @@ async function runRainbowSimulator() {
     let crackedUnsaltedUsers = 0;
     let crackedSaltedUsers = 0;
 
-    const tableMap = (usePre && loaded) ? rainbowMap : new Map();
+    // Build a lookup map: prefer the precomputed rainbowMap when available, otherwise
+    // build a temporary map from the current password list so the simulator still shows
+    // meaningful 'instant crack' numbers even when the server-side precomputed file is unavailable.
+    let tableMap = new Map();
+    if (usePre && loaded) {
+      tableMap = rainbowMap;
+    } else {
+      // compute sha256 for the fallback list into a temp map
+      const tempMap = new Map();
+      const tmpPromises = pwList.map(async (pw) => {
+        const h = await sha256Hex(pw);
+        tempMap.set(h, pw);
+      });
+      await Promise.all(tmpPromises);
+      tableMap = tempMap;
+    }
 
     for (const pw of pwList) {
       const h = await sha256Hex(pw);

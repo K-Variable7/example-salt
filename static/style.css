@@ -48,6 +48,43 @@ canvas { background: #fff; border: 1px solid #e8eef6; border-radius:6px; transit
   --text: #102a43;
   --muted: #6b7280;
 }
+
+/* Tooltip styling */
+.tooltip {
+  display: inline-block;
+  position: relative;
+  margin-left: 0.4rem;
+  color: var(--muted);
+}
+.tooltip .fa-circle-info { font-size: 0.9rem; }
+.tooltip:focus { outline: none; }
+.tooltip .tooltip-text {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 120%;
+  background: rgba(10,14,20,0.96);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 4px;
+  width: 240px;
+  z-index: 50;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+.tooltip:hover .tooltip-text,
+.tooltip:focus-within .tooltip-text {
+  display: block;
+}
+.tooltip .tooltip-text::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 10px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent rgba(10,14,20,0.96) transparent;
+}
 body.dark {
   --bg: #0b1220;
   --card: #071126;

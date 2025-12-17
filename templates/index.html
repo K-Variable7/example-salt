@@ -79,34 +79,69 @@
 
             <div class="field is-grouped is-align-items-center">
               <div class="control">
-                <label class="label">Argon2 time</label>
+                <label class="label">Argon2 time
+                  <span class="tooltip" tabindex="0" aria-describedby="tip-argonTime">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span id="tip-argonTime" role="tooltip" class="tooltip-text">Number of Argon2 iterations; higher values increase compute time. Demo-friendly: 1–3.</span>
+                  </span>
+                </label>
                 <input id="argonTime" class="input" type="number" min="1" max="10" value="2" style="width:6rem" />
               </div>
               <div class="control">
-                <label class="label">Memory (KB)</label>
+                <label class="label">Memory (KB)
+                  <span class="tooltip" tabindex="0" aria-describedby="tip-argonMem">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span id="tip-argonMem" role="tooltip" class="tooltip-text">Memory required by Argon2 in KB. Large values (tens of MB) increase resistance but may freeze browsers.</span>
+                  </span>
+                </label>
                 <input id="argonMem" class="input" type="number" min="8" value="65536" style="width:8rem" />
               </div>
               <div class="control">
-                <label class="label">Parallelism</label>
+                <label class="label">Parallelism
+                  <span class="tooltip" tabindex="0" aria-describedby="tip-argonParallel">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span id="tip-argonParallel" role="tooltip" class="tooltip-text">Number of lanes/threads Argon2 uses. Increasing can improve throughput on multicore systems.</span>
+                  </span>
+                </label>
                 <input id="argonParallel" class="input" type="number" min="1" value="1" style="width:4rem" />
               </div>
               <div class="control">
                 <p id="argonStatus" class="has-text-grey"></p>
               </div>
               <div class="control">
-                <label class="label">bcrypt rounds</label>
+                <label class="label">bcrypt rounds
+                  <span class="tooltip" tabindex="0" aria-describedby="tip-bcryptRounds">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span id="tip-bcryptRounds" role="tooltip" class="tooltip-text">Cost factor for bcrypt; each round doubles compute time. Use low values for demos (8–12).</span>
+                  </span>
+                </label>
                 <input id="bcryptRounds" class="input" type="number" min="4" max="15" value="10" style="width:5rem" />
               </div>
               <div class="control">
-                <label class="label">scrypt N</label>
+                <label class="label">scrypt N
+                  <span class="tooltip" tabindex="0" aria-describedby="tip-scryptN">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span id="tip-scryptN" role="tooltip" class="tooltip-text">Work factor (N) for scrypt; higher N increases memory & CPU. Reduce for CI/testing.</span>
+                  </span>
+                </label>
                 <input id="scryptN" class="input" type="number" min="1024" value="16384" style="width:8rem" />
               </div>
               <div class="control">
-                <label class="label">scrypt r</label>
+                <label class="label">scrypt r
+                  <span class="tooltip" tabindex="0" aria-describedby="tip-scryptR">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span id="tip-scryptR" role="tooltip" class="tooltip-text">Block size parameter (r) for scrypt affecting memory usage; typical demo value is 1–8.</span>
+                  </span>
+                </label>
                 <input id="scryptR" class="input" type="number" min="1" value="8" style="width:4rem" />
               </div>
               <div class="control">
-                <label class="label">scrypt p</label>
+                <label class="label">scrypt p
+                  <span class="tooltip" tabindex="0" aria-describedby="tip-scryptP">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span id="tip-scryptP" role="tooltip" class="tooltip-text">Parallelization parameter (p) for scrypt; increases compute parallelism.</span>
+                  </span>
+                </label>
                 <input id="scryptP" class="input" type="number" min="1" value="1" style="width:4rem" />
               </div>
               <div class="control">
