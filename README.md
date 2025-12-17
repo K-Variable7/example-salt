@@ -72,6 +72,14 @@ ffmpeg -ss 0 -t 8 -i videos/demo.mp4 -vf "fps=15,scale=640:-1:flags=lanczos" -lo
 
 Below is a short demo of the app (Local-only mode). **Privacy note:** the GIF uses synthetic demo passwords and may show them visibly — do not record or commit real passwords. If you prefer, regenerate the GIF with placeholder text.
 
+**Better preview (MP4):** click to open the preview (GitHub renders MP4 inline in the file viewer).
+
+<video controls width="640">
+  <source src="videos/demo_preview.mp4" type="video/mp4">
+  Your browser does not support the video tag — view the MP4 directly: [videos/demo_preview.mp4](videos/demo_preview.mp4)
+</video>
+
+
 ![Demo of Salt vs No-Salt Demonstrator](demo.gif)
 
 - Add Argon2 WASM client-side option for stronger local KDF demonstration (implemented). The demo uses a lazy-loaded CDN build of `argon2-browser` when you enable "Use Argon2 (local)" in Local-only mode.
