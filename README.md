@@ -72,12 +72,9 @@ ffmpeg -ss 0 -t 8 -i videos/demo.mp4 -vf "fps=15,scale=640:-1:flags=lanczos" -lo
 
 Below is a short demo of the app (Local-only mode). **Privacy note:** the GIF uses synthetic demo passwords and may show them visibly — do not record or commit real passwords. If you prefer, regenerate the GIF with placeholder text.
 
-**Better preview (MP4):** click to open the preview (GitHub renders MP4 inline in the file viewer).
+**Preview:** click the image to open the MP4 preview (GitHub will show it in a player on the MP4 page).
 
-<video controls width="640">
-  <source src="videos/demo_preview.mp4" type="video/mp4">
-  Your browser does not support the video tag — view the MP4 directly: [videos/demo_preview.mp4](videos/demo_preview.mp4)
-</video>
+[![Demo preview (click to play)](demo_poster.png)](videos/demo_preview.mp4)
 
 
 ![Demo of Salt vs No-Salt Demonstrator](demo.gif)
