@@ -768,10 +768,41 @@ async function runRainbowSimulator() {
     if (instantEl) instantEl.textContent = String(crackedUnsaltedUsers);
     if (saltedEl) saltedEl.textContent = String(crackedSaltedUsers);
 
+    // Trigger a small pulse animation on update for visibility
+    const summary = document.getElementById('rainbowSummary');
+    if (summary) {
+      summary.classList.remove('rainbow-pulse');
+      // force reflow to restart animation
+      void summary.offsetWidth;
+      summary.classList.add('rainbow-pulse');
+    }
+
     if (!rainbowChart) initRainbowChart();
     rainbowChart.data.datasets[0].data = [crackedUnsaltedUsers];
     rainbowChart.data.datasets[1].data = [crackedSaltedUsers];
     rainbowChart.update();
+
+    // Populate details list for unsalted cracked passwords
+    const detailsList = document.getElementById('rainbowDetailsList');
+    if (detailsList) {
+      detailsList.innerHTML = '';
+      const crackedPwList = [];
+      // find which passwords in pwList were cracked
+      for (const pw of pwList) {
+        const h = await sha256Hex(pw);
+        if (tableMap.has(h)) crackedPwList.push(pw);
+      }
+      // Add list items (limit to first 100 to avoid huge lists)
+      const maxShow = 200;
+      for (let i=0;i<Math.min(crackedPwList.length, maxShow); i++){
+        const li = document.createElement('li');
+        li.textContent = crackedPwList[i];
+        detailsList.appendChild(li);
+      }
+      if (crackedPwList.length > maxShow){
+        const li = document.createElement('li'); li.textContent = `...and ${crackedPwList.length - maxShow} more`; detailsList.appendChild(li);
+      }
+    }
   } catch (e) {
     out.innerHTML = `<p style="color:orange">Simulation failed: ${e}</p>`;
     if (statusEl) statusEl.textContent = 'Simulation failed';
@@ -786,6 +817,22 @@ async function runRainbowSimulator() {
 // Wire simulator button
 const rainbowBtn = document.getElementById('rainbowBtn');
 if (rainbowBtn) rainbowBtn.addEventListener('click', (e) => { e.preventDefault(); runRainbowSimulator(); });
+
+// Wire details toggle
+const rainbowDetailsBtn = document.getElementById('rainbowDetailsBtn');
+const rainbowDetails = document.getElementById('rainbowDetails');
+if (rainbowDetailsBtn && rainbowDetails) {
+  rainbowDetailsBtn.addEventListener('click', () => {
+    const expanded = rainbowDetailsBtn.getAttribute('aria-expanded') === 'true';
+    if (expanded) {
+      rainbowDetailsBtn.setAttribute('aria-expanded','false');
+      rainbowDetails.classList.remove('show');
+    } else {
+      rainbowDetailsBtn.setAttribute('aria-expanded','true');
+      rainbowDetails.classList.add('show');
+    }
+  });
+}
 
 // Load common passwords on startup
 loadCommonPasswords();

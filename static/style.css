@@ -61,6 +61,20 @@ canvas { background: #fff; border: 1px solid #e8eef6; border-radius:6px; transit
 @keyframes spin { to { transform: rotate(360deg); } }
 #rainbowSummary { color: var(--text); }
 
+/* Highlight animation when counts update */
+.rainbow-pulse { animation: rainbowPulse 900ms ease both; }
+@keyframes rainbowPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(0,0,0,0); }
+  50% { transform: scale(1.02); box-shadow: 0 8px 18px rgba(78,121,167,0.08); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(0,0,0,0); }
+}
+
+/* Details box */
+#rainbowDetails { display:none; margin-top:0.75rem; padding:0.5rem; background:var(--card); border-radius:6px; border:1px solid #eef3f7; }
+#rainbowDetails.show { display:block; }
+#rainbowDetails ul { margin:0; padding-left:1.2rem }
+#rainbowDetails .sr-note { font-size:0.85rem; color:var(--muted); }
+
 /* Tooltip styling */
 .tooltip {
   display: inline-block;

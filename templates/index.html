@@ -204,7 +204,15 @@
             <div id="rainbowSummary" style="margin-left:auto;font-weight:600;">Unsalted instant cracks: <span id="rainbowInstantCount">0</span> &nbsp; • &nbsp; Salted unique: <span id="rainbowSaltedCount">0</span></div>
           </div>
           <div id="rainbowResults" style="margin-top:1rem">No simulation run yet.</div>
-
++          <div style="margin-top:0.5rem;display:flex;gap:0.5rem;align-items:center;">
++            <button id="rainbowDetailsBtn" class="button is-small is-light" aria-expanded="false" aria-controls="rainbowDetails">Show details</button>
++            <div class="sr-note" style="margin-left:auto;color:var(--muted);font-size:0.9rem">Details show sample common passwords only; avoid entering real passwords.</div>
++          </div>
++          <div id="rainbowDetails" role="region" aria-live="polite" aria-atomic="true">
++            <p class="sr-note">Instantly cracked passwords (unsalted):</p>
++            <ul id="rainbowDetailsList"></ul>
++          </div>
+*** End Patch
           <div style="margin-top:1rem">
             <canvas id="rainbowChart" height="120"></canvas>
           </div>
