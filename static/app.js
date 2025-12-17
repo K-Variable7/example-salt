@@ -116,7 +116,19 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTutori
 // Show on first load after a short delay to avoid startling the user
 setTimeout(showTutorialIfNeeded, 600);
 
-// Demo data
+// Expose a manual show for maintainers/users to re-open tutorial even if previously dismissed
+ function showTutorial() {
+   try {
+     if (!tutorialOverlay) return;
+     tutorialOverlay.setAttribute('aria-hidden', 'false');
+     tutorialOverlay.style.display = 'flex';
+     tutorialOverlay.tabIndex = -1;
+     tutorialOverlay.focus();
+   } catch (e) { }
+ }
+
+const showTutorialBtn = document.getElementById('showTutorialBtn');
+if (showTutorialBtn) showTutorialBtn.addEventListener('click', (e) => { e.preventDefault(); showTutorial(); });
 const sampleRainbow = ['password','123456','qwerty','letmein','12345678','password1'];
 
 // Rainbow-table simulator data (loaded from data/common_passwords.txt)
