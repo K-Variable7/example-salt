@@ -77,6 +77,12 @@ Run E2E tests:
 pytest tests/e2e -q
 ```
 
+CI artifacts & privacy
+
+- For privacy and to limit exposure, the CI job does **not** record or upload full Playwright videos or traces.
+- On E2E failures the workflow will collect a best-effort GIF (via `scripts/record_screenshots.py`) and a **redacted** `server.log` (sensitive headers and common secret fields are redacted). Traces are disabled and full videos are not uploaded.
+- Artifact uploads are only performed for non-forked PRs (to avoid exposing data from external contributors) and uploaded artifacts are retained for **7 days**.
+
 Recording a demo video (for GIF)
 
 You can record a short demo using Playwright and convert the resulting MP4 to GIF via ffmpeg:
