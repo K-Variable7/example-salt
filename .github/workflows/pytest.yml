@@ -83,7 +83,7 @@ jobs:
         run: |
           pytest -q tests/e2e -k "not flaky" -s --junitxml=tests/e2e/report.xml || true
 
-      - name: Collect E2E artifacts on failure
+      - name: Collect E2E artifacts on failure (compress traces & videos)
         if: ${{ failure() }}
         run: |
           mkdir -p artifacts
@@ -91,12 +91,12 @@ jobs:
           python scripts/record_screenshots.py --out artifacts/demo.gif || true
           # Copy server log
           cp server.log artifacts/server.log || true
-          # Gather Playwright frames if they exist
+          # Gather Playwright frames if they exist (keep raw frames)
           if [ -d videos/frames ]; then mkdir -p artifacts/frames && cp videos/frames/*.png artifacts/frames/ || true; fi
-          # Collect full-resolution Playwright videos
-          if [ -d videos ]; then mkdir -p artifacts/videos && cp videos/* artifacts/videos/ || true; fi
-          # Copy Playwright traces
-          if [ -d traces ]; then mkdir -p artifacts/traces && cp traces/*.zip artifacts/traces/ || true; fi
+          # Collect and compress full-resolution Playwright videos
+          if [ -d videos ]; then mkdir -p artifacts && tar -C videos -czf artifacts/videos.tar.gz . || true; fi
+          # Copy Playwright traces and compress them into an archive
+          if [ -d traces ]; then mkdir -p artifacts && tar -C traces -czf artifacts/traces.tar.gz . || true; fi
           # Copy pytest junit xml
           if [ -f tests/e2e/report.xml ]; then cp tests/e2e/report.xml artifacts/report.xml || true; fi
         continue-on-error: true
