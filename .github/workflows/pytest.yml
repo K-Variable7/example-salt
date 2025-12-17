@@ -111,11 +111,6 @@ jobs:
             sed -E 's/(password["'\ ]*[:= ]?)[^"<>]*/\1[REDACTED]/Ig' tests/e2e/report.xml > artifacts/report.xml || cp tests/e2e/report.xml artifacts/report.xml || true
           fi
 
-          # Gather Playwright frames if they exist (keep raw frames)
-          if [ -d videos/frames ]; then mkdir -p artifacts/frames && cp videos/frames/*.png artifacts/frames/ || true; fi
-
-          # Collect and compress full-resolution Playwright videos
-          if [ -d videos ]; then mkdir -p artifacts && tar -C videos -czf artifacts/videos.tar.gz . || true; fi
 
 
         continue-on-error: true

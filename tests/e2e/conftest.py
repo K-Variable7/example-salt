@@ -1,26 +1,4 @@
-import os
-from pathlib import Path
 import pytest
-
-
-def pytest_configure(config):
-    # Ensure directories exist when running in CI
-    if os.getenv("CI"):
-        Path("videos").mkdir(exist_ok=True)
-
-
-@pytest.fixture
-def browser_context_args(browser_context_args):
-    """Add video recording args to Playwright contexts when running under CI."""
-    if os.getenv("CI"):
-        browser_context_args.update(
-            {
-                "record_video_dir": os.path.abspath("videos"),
-                # Smaller default size to limit artifact size
-                "record_video_size": (800, 600),
-            }
-        )
-    return browser_context_args
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -29,6 +7,10 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     rep = outcome.get_result()
     setattr(item, "rep_" + rep.when, rep)
+
+
+# Video recording disabled to reduce privacy risk and artifact size.
+# Per-test Playwright traces were also disabled; CI will only collect screenshots/GIFs and redacted logs on failure.
 
 
 # Tracing is disabled to avoid uploading sensitive Playwright trace archives.
