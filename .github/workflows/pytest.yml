@@ -117,21 +117,6 @@ jobs:
           # Collect and compress full-resolution Playwright videos
           if [ -d videos ]; then mkdir -p artifacts && tar -C videos -czf artifacts/videos.tar.gz . || true; fi
 
-          # Inspect Playwright traces for potential sensitive contents; separate suspect traces
-          mkdir -p artifacts/traces_clean artifacts/traces_suspect
-          if [ -d traces ]; then
-            for z in traces/*.zip; do
-              [ -e "$z" ] || continue
-              if unzip -p "$z" | grep -E -i "$SENSITIVE_PATTERN" >/dev/null 2>&1; then
-                echo "Trace $z contains possible sensitive data — moving to traces_suspect"
-                cp "$z" artifacts/traces_suspect/ || true
-              else
-                cp "$z" artifacts/traces_clean/ || true
-              fi
-            done
-            if [ -d artifacts/traces_clean ] && [ "$(ls -A artifacts/traces_clean)" ]; then tar -C artifacts/traces_clean -czf artifacts/traces.tar.gz . || true; fi
-            if [ -d artifacts/traces_suspect ] && [ "$(ls -A artifacts/traces_suspect)" ]; then tar -C artifacts/traces_suspect -czf artifacts/traces_suspect.tar.gz . || true; fi
-          fi
 
         continue-on-error: true
 
