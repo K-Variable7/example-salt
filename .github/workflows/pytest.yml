@@ -83,30 +83,65 @@ jobs:
         run: |
           pytest -q tests/e2e -k "not flaky" -s --junitxml=tests/e2e/report.xml || true
 
-      - name: Collect E2E artifacts on failure (compress traces & videos)
-        if: ${{ failure() }}
+      - name: Collect E2E artifacts on failure (redact logs, scan secrets, compress traces & videos)
+        if: ${{ failure() && (github.event.pull_request.head.repo.fork == false) }}
         run: |
           mkdir -p artifacts
           # Attempt to record a short GIF demo (best-effort; may require ffmpeg)
           python scripts/record_screenshots.py --out artifacts/demo.gif || true
-          # Copy server log
-          cp server.log artifacts/server.log || true
+
+          # Redact sensitive headers/fields from server.log and save a redacted copy
+          SENSITIVE_PATTERN='(Authorization:|Cookie:|password|passwd|token|api_key|apikey|secret|ghp_[A-Za-z0-9]+|AKIA[0-9A-Z]{16}|-----BEGIN PRIVATE KEY-----)'
+          if [ -f server.log ]; then
+            echo 'Scanning server.log for sensitive patterns...'
+            if grep -E -i "$SENSITIVE_PATTERN" server.log >/dev/null 2>&1; then
+              echo 'Sensitive patterns detected in server.log — creating redacted copy'
+              sed -E 's/(Authorization:[^\n]*)/Authorization: [REDACTED]/Ig' server.log | \
+                sed -E 's/(Cookie:[^\n]*)/Cookie: [REDACTED]/Ig' | \
+                sed -E 's/(password["'\ ]*[:= ][^,}\n]*)/password: [REDACTED]/Ig' | \
+                sed -E 's/(api[_-]?key["'\ ]*[:= ][^,}\n]*)/api_key: [REDACTED]/Ig' > artifacts/server.log
+            else
+              cp server.log artifacts/server.log || true
+            fi
+          fi
+
+          # Redact commonly-sensitive fields in junit xml (best-effort)
+          if [ -f tests/e2e/report.xml ]; then
+            echo 'Redacting potential private fields in tests/e2e/report.xml'
+            sed -E 's/(password["'\ ]*[:= ]?)[^"<>]*/\1[REDACTED]/Ig' tests/e2e/report.xml > artifacts/report.xml || cp tests/e2e/report.xml artifacts/report.xml || true
+          fi
+
           # Gather Playwright frames if they exist (keep raw frames)
           if [ -d videos/frames ]; then mkdir -p artifacts/frames && cp videos/frames/*.png artifacts/frames/ || true; fi
+
           # Collect and compress full-resolution Playwright videos
           if [ -d videos ]; then mkdir -p artifacts && tar -C videos -czf artifacts/videos.tar.gz . || true; fi
-          # Copy Playwright traces and compress them into an archive
-          if [ -d traces ]; then mkdir -p artifacts && tar -C traces -czf artifacts/traces.tar.gz . || true; fi
-          # Copy pytest junit xml
-          if [ -f tests/e2e/report.xml ]; then cp tests/e2e/report.xml artifacts/report.xml || true; fi
+
+          # Inspect Playwright traces for potential sensitive contents; separate suspect traces
+          mkdir -p artifacts/traces_clean artifacts/traces_suspect
+          if [ -d traces ]; then
+            for z in traces/*.zip; do
+              [ -e "$z" ] || continue
+              if unzip -p "$z" | grep -E -i "$SENSITIVE_PATTERN" >/dev/null 2>&1; then
+                echo "Trace $z contains possible sensitive data — moving to traces_suspect"
+                cp "$z" artifacts/traces_suspect/ || true
+              else
+                cp "$z" artifacts/traces_clean/ || true
+              fi
+            done
+            if [ -d artifacts/traces_clean ] && [ "$(ls -A artifacts/traces_clean)" ]; then tar -C artifacts/traces_clean -czf artifacts/traces.tar.gz . || true; fi
+            if [ -d artifacts/traces_suspect ] && [ "$(ls -A artifacts/traces_suspect)" ]; then tar -C artifacts/traces_suspect -czf artifacts/traces_suspect.tar.gz . || true; fi
+          fi
+
         continue-on-error: true
 
       - name: Upload E2E artifacts
-        if: ${{ failure() }}
+        if: ${{ failure() && (github.event.pull_request.head.repo.fork == false) }}
         uses: actions/upload-artifact@v4
         with:
           name: e2e-artifacts
           path: artifacts
+          retention-days: 7
 
       - name: Stop dev server
         run: |
