@@ -27,3 +27,38 @@ jobs:
           CI: true
         run: |
           pytest -q
+
+  e2e:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Install Playwright browsers
+        run: |
+          python -m playwright install --with-deps
+      - name: Start dev server
+        run: |
+          nohup python -u app.py > server.log 2>&1 & echo $! > server.pid
+          # Wait for the server to accept connections
+          for i in $(seq 1 30); do
+            if curl -sSf http://127.0.0.1:5000/ -I; then echo 'server up'; break; fi
+            sleep 1
+          done
+          tail -n +1 server.log | sed -n '1,200p'
+      - name: Run Playwright E2E tests
+        env:
+          CI: true
+        run: |
+          pytest -q tests/e2e -k "not flaky" -s
+      - name: Stop dev server
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) || true; fi
