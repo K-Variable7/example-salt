@@ -1,5 +1,7 @@
 # Salt vs. No-Salt Demonstrator
+A quick demo to explore password hashing, salting, and KDFs.  
 
+[![CI](https://github.com/K-Variable7/example-salt/actions/workflows/pytest.yml/badge.svg)](https://github.com/K-Variable7/example-salt/actions/workflows/pytest.yml)
 A small demo web app that shows the difference between unsalted and salted password hashing. Intended for educational and local use only.
 
 ## Quick start
@@ -37,6 +39,19 @@ python app.py
 - **Local KDF toggles (Argon2 / bcrypt / scrypt):** You can now choose to run Argon2, bcrypt, or scrypt locally in the browser to demonstrate per-guess cost. These KDFs are *lazy-loaded* only when selected. Beware that high resource parameters may make your browser unresponsive — the UI shows warnings and timing info when you run them.
 
 If you want a compact demonstration, enable "Local-only" and pick a KDF to see how the estimated crack time increases with work factor and measured compute time.
+
+## KDF tuning — quick how-to 🔧
+
+This short guide helps choose demo-friendly KDF parameters (safe for local demos, not production recommendations):
+
+- **Argon2 (local):** `time` (iterations) and `mem` (KB) increase cost. For demos use `time=1..3` and `mem=32768..131072` (32–128 MB). Beware: high `mem` can freeze browsers; a warning modal appears when memory is large.
+- **bcrypt (local):** `rounds` (cost) — each additional round ~doubles compute. Demo-friendly: `8..12` for fast demos; `10` is a reasonable default for demos.
+- **scrypt (local):** `N`, `r`, `p` control work/parallelism. Demo defaults: `N=16384`, `r=8`, `p=1`; reduce to `N=1024` and `r=1` for CI/test runs.
+
+How to interpret demo timings:
+- The demo measures per-hash time (in seconds) and multiplies by guesses to estimate total crack time (i.e., guesses = 2^(entropy bits)). Use this to show how raising cost parameters increases the estimated crack time dramatically.
+
+⚠️ Reminder: **Do not use real passwords** — the demo is for educational purposes only.
 
 ### Running tests locally
 
