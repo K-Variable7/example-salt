@@ -63,6 +63,10 @@ jobs:
         run: |
           python -m playwright install --with-deps
 
+      - name: Install ffmpeg (for GIF creation and debugging)
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - name: Start dev server
         run: |
           nohup python -u app.py > server.log 2>&1 & echo $! > server.pid
@@ -89,6 +93,10 @@ jobs:
           cp server.log artifacts/server.log || true
           # Gather Playwright frames if they exist
           if [ -d videos/frames ]; then mkdir -p artifacts/frames && cp videos/frames/*.png artifacts/frames/ || true; fi
+          # Collect full-resolution Playwright videos
+          if [ -d videos ]; then mkdir -p artifacts/videos && cp videos/* artifacts/videos/ || true; fi
+          # Copy Playwright traces
+          if [ -d traces ]; then mkdir -p artifacts/traces && cp traces/*.zip artifacts/traces/ || true; fi
           # Copy pytest junit xml
           if [ -f tests/e2e/report.xml ]; then cp tests/e2e/report.xml artifacts/report.xml || true; fi
         continue-on-error: true
