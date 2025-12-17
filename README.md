@@ -30,6 +30,14 @@ python app.py
 - Add tests and CI (pytest + a GitHub Actions workflow added)
 - Visual polish: improved styling (Bulma + custom CSS), icons (Font Awesome), logo, button animations, and result fade-ins
 
+### New features (added)
+
+- **Rainbow-table simulator:** A client-side simulator (under the demo UI) precomputes unsalted hashes for a small, included list of common passwords and shows how unsalted hashes can be cracked instantly using a precomputed table while salted hashes remain unique per user. Use the **"Rainbow-table simulator"** panel to configure users-per-password and toggle the precomputed table.
+
+- **Local KDF toggles (Argon2 / bcrypt / scrypt):** You can now choose to run Argon2, bcrypt, or scrypt locally in the browser to demonstrate per-guess cost. These KDFs are *lazy-loaded* only when selected. Beware that high resource parameters may make your browser unresponsive — the UI shows warnings and timing info when you run them.
+
+If you want a compact demonstration, enable "Local-only" and pick a KDF to see how the estimated crack time increases with work factor and measured compute time.
+
 ### Running tests locally
 
 Install dev deps: `pip install -r requirements.txt` (includes `pytest` and Playwright tooling).
