@@ -49,6 +49,12 @@ canvas { background: #fff; border: 1px solid #e8eef6; border-radius:6px; transit
   --muted: #6b7280;
 }
 
+/* Tutorial overlay */
+#tutorialOverlay { display: none; }
+#tutorialOverlay[aria-hidden="false"] { display: flex; }
+#tutorialOverlay .button { min-width: 120px; }
+#tutorialOverlay .title { margin-bottom: 0.25rem; }
+
 /* Tooltip styling */
 .tooltip {
   display: inline-block;

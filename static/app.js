@@ -81,6 +81,41 @@ function initTooltips() {
 // Run tooltip init after DOM ready (script loaded at end of body)
 try { initTooltips(); } catch (e) { /* non-fatal */ }
 
+// Tutorial overlay behavior: show on first run, persist dismissal in localStorage
+const TUTORIAL_KEY = 'saltDemo_tutorial_dismissed';
+const tutorialOverlay = document.getElementById('tutorialOverlay');
+const dismissTutorial = document.getElementById('dismissTutorial');
+const neverShowTutorial = document.getElementById('neverShowTutorial');
+
+function showTutorialIfNeeded() {
+  try {
+    const dismissed = localStorage.getItem(TUTORIAL_KEY);
+    if (dismissed === 'true') return;
+    if (!tutorialOverlay) return;
+    tutorialOverlay.setAttribute('aria-hidden', 'false');
+    tutorialOverlay.style.display = 'flex';
+    // trap focus inside overlay
+    tutorialOverlay.tabIndex = -1;
+    tutorialOverlay.focus();
+  } catch (e) { /* ignore */ }
+}
+
+function hideTutorial(persist = false) {
+  if (!tutorialOverlay) return;
+  tutorialOverlay.setAttribute('aria-hidden', 'true');
+  tutorialOverlay.style.display = 'none';
+  try { if (persist) localStorage.setItem(TUTORIAL_KEY, 'true'); } catch (e) {}
+}
+
+if (dismissTutorial) dismissTutorial.addEventListener('click', () => hideTutorial(true));
+if (neverShowTutorial) neverShowTutorial.addEventListener('click', () => hideTutorial(true));
+
+// Dismiss on Esc
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTutorial(false); });
+
+// Show on first load after a short delay to avoid startling the user
+setTimeout(showTutorialIfNeeded, 600);
+
 // Demo data
 const sampleRainbow = ['password','123456','qwerty','letmein','12345678','password1'];
 

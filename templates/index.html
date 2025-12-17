@@ -215,6 +215,23 @@
       <!-- Chart.js CDN -->
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+      <!-- First-run tutorial overlay (hidden by default) -->
+      <div id="tutorialOverlay" aria-hidden="true" style="display:none;position:fixed;inset:0;background:rgba(3,6,11,0.6);z-index:60;align-items:center;justify-content:center;">
+        <div style="background:var(--card);color:var(--text);padding:1.25rem;border-radius:8px;max-width:820px;margin:1rem;box-shadow:0 12px 30px rgba(2,6,23,0.5);">
+          <h2 class="title is-4">Welcome to the Salt vs No-Salt demo</h2>
+          <p>This short tour highlights key controls: <strong>Local-only</strong> (keeps everything in your browser), the <strong>Rainbow-table simulator</strong>, and the <strong>KDF toggles</strong> (Argon2 / bcrypt / scrypt).</p>
+          <ol style="margin-top:0.75rem">
+            <li><strong>Local-only:</strong> toggle to avoid sending plaintext to the server.</li>
+            <li><strong>Rainbow-table simulator:</strong> shows instant cracks of unsalted hashes using a small precomputed list.</li>
+            <li><strong>KDF toggles:</strong> enable a KDF locally to measure per-guess cost (slow parameters will warn).</li>
+          </ol>
+          <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.75rem;">
+            <button id="dismissTutorial" class="button">Got it</button>
+            <button id="neverShowTutorial" class="button is-light">Don't show again</button>
+          </div>
+        </div>
+      </div>
+
     <script src="/static/app.js"></script>
   </body>
 </html>
