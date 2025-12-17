@@ -1,0 +1,62 @@
+/* Custom styling to complement Bulma */
+body {
+  background: linear-gradient(180deg, #f6f9fc 0%, #ffffff 50%);
+  color: #102a43;
+}
+.container.is-max-desktop {
+  max-width: 960px;
+}
+.header-hero {
+  margin-bottom: 1rem;
+}
+.card-demo { padding: 1rem; }
+.field { margin-bottom: 0.75rem; }
+#demoResults pre { background:#f4f6f8; padding:0.4rem; border-radius:4px }
+footer { margin-top:2rem; color:#6b7280; font-size:0.9rem }
+/* Small adjustments for the charts area */
+canvas { background: #fff; border: 1px solid #e8eef6; border-radius:6px; transition: opacity 400ms ease; opacity: 0.95; }
+
+/* Subtle animations */
+.fade-in { animation: fadeIn 450ms ease both; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.button.is-primary { background: linear-gradient(90deg,#4e79a7,#6fb3d9); color: #fff; border: none; }
+.button.is-light:hover { background: #f4f6f8; }
+
+/* Result card */
+.card-demo { box-shadow: 0 8px 20px rgba(2,6,23,0.06); border-radius: 8px; }
+#demoResults { transition: opacity 300ms ease, transform 300ms ease; }
+#demoResults.show { opacity: 1; transform: none }
+#demoResults.hidden { opacity: 0; transform: translateY(8px) }
+
+/* Header logo animation */
+.header-hero img { transition: transform 300ms ease; }
+.header-hero img:hover { transform: rotate(-8deg) scale(1.03); }
+
+/* Icon spacing */
+.button .icon { margin-right: 0.5rem; }
+
+/* Small responsive tweaks */
+@media (max-width: 720px) {
+  .field.is-grouped { flex-wrap: wrap; }
+}
+
+/* Dark mode */
+:root {
+  --bg: #f6f9fc;
+  --card: #ffffff;
+  --text: #102a43;
+  --muted: #6b7280;
+}
+body.dark {
+  --bg: #0b1220;
+  --card: #071126;
+  --text: #e6eef6;
+  --muted: #bcd7ef; /* lighter muted color for better contrast */
+  background: linear-gradient(180deg, #071126 0%, #0b1220 50%);
+}
+body { background: var(--bg); color: var(--text); }
+.title, .subtitle { color: var(--text) !important; }
+.card-demo, .box { background: var(--card); color: var(--text); }
+small, p.help { color: var(--muted); }
+

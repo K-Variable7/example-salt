@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Salt vs No-Salt Demonstrator</title>
+    <!-- Bulma CSS for quick, clean styling -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <section class="section header-hero">
+      <div class="container is-max-desktop">
+        <div class="columns is-vcentered">
+          <div class="column is-narrow">
+            <label class="checkbox"><input id="darkToggle" type="checkbox" /> Dark</label>
+          </div>
+          <div class="column is-narrow">
+            <img src="/static/logo.svg" alt="logo" style="width:56px;height:56px;" />
+          </div>
+          <div class="column">
+            <h1 class="title">Salt vs No-Salt Demonstrator <span class="tag is-success is-light">Demo</span></h1>
+            <p class="subtitle">Interactive demo: enter a password (or generate one), toggle <strong>Local-only</strong> to avoid sending plaintext to the server, and explore how salting changes hashes and attack surface.</p>
+          </div>
+          <div class="column is-narrow">
+            <button id="generate" class="button is-light"><span class="icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span> <span>Generate</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container is-max-desktop">
+        <div class="card card-demo">
+          <div class="content">
+            <div class="field">
+              <label class="label">Password</label>
+              <div class="field has-addons">
+                <div class="control is-expanded">
+                  <input id="password" class="input" type="password" placeholder="Enter a demo password" aria-describedby="showPwHelp">
+                </div>
+                <div class="control">
+                  <label class="checkbox" id="showPwLabel"><input id="showPwd" type="checkbox" /> Show</label>
+                </div>
+              </div>
+              <p class="help" id="showPwHelp">Toggle to reveal the typed password (for demos only)</p>
+            </div>
+
+            <div class="field is-grouped">
+              <div class="control">
+                <button id="demoBtn" class="button is-primary">Run Demo</button>
+              </div>
+              <div class="control">
+                <button id="exportBtn" class="button is-light">Export JSON</button>
+              </div>
+              <div class="control">
+                <button id="exportCsvBtn" class="button is-light">Export CSV</button>
+              </div>
+              <div class="control">
+                <button id="downloadPngBtn" class="button is-light">Download PNGs</button>
+              </div>
+              <div class="control">
+                <label class="checkbox"><input id="localOnly" type="checkbox" checked> Local-only</label>
+              </div>
+              <div class="control">
+                <label class="checkbox"><input id="useArgonLocal" type="checkbox"> Use Argon2 (local)</label>
+              </div>
+
+            </div>
+
+            <div class="field is-grouped is-align-items-center">
+              <div class="control">
+                <label class="label">Argon2 time</label>
+                <input id="argonTime" class="input" type="number" min="1" max="10" value="2" style="width:6rem" />
+              </div>
+              <div class="control">
+                <label class="label">Memory (KB)</label>
+                <input id="argonMem" class="input" type="number" min="8" value="65536" style="width:8rem" />
+              </div>
+              <div class="control">
+                <label class="label">Parallelism</label>
+                <input id="argonParallel" class="input" type="number" min="1" value="1" style="width:4rem" />
+              </div>
+              <div class="control">
+                <p id="argonStatus" class="has-text-grey"></p>
+              </div>
+            </div>
+
+            <div id="strength" class="content">Strength: <strong id="strengthValue">—</strong></div>
+          </div>
+        </div>
+
+        <div class="box" style="margin-top:1rem">
+          <h2 class="title is-5">Results</h2>
+          <div id="demoResults" style="display:block" aria-live="polite">No demo run yet.</div>
+        </div>
+
+        <div class="columns" style="margin-top:1rem">
+          <div class="column">
+            <h4 class="title is-6">Estimated crack time</h4>
+            <canvas id="crackTimeChart" height="150"></canvas>
+          </div>
+          <div class="column">
+            <h4 class="title is-6">Collision counts (unsalted vs salted)</h4>
+            <canvas id="collisionChart" height="150"></canvas>
+          </div>
+        </div>
+
+        <div style="margin-top:0.5rem">
+          <small style="color:#666">Tip: Don't use real passwords — use generated or test passwords.</small>
+        </div>
+      </div>
+    </section>
+
+      <!-- Confirm modal for high Argon2 params -->
+      <div id="confirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:1rem;border-radius:6px;min-width:320px;max-width:90%;box-shadow:0 6px 18px rgba(0,0,0,0.2);">
+          <h3 style="margin-top:0">Warning: High Argon2 resource settings</h3>
+          <p id="modalText">This configuration will use a lot of CPU/memory and may make your browser unresponsive. Proceed?</p>
+          <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.5rem;">
+            <button id="cancelModal">Cancel</button>
+            <button id="confirmModalBtn" style="background:#e15759;color:#fff;border:none;padding:0.35rem 0.6rem;border-radius:4px;">Proceed</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart.js CDN -->
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
