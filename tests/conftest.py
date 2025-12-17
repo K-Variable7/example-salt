@@ -1,3 +1,12 @@
+"""Test configuration helpers."""
+import os
+import sys
+
+# Ensure project root (one level up from tests/) is first on sys.path so top-level
+# modules (e.g., `app`, `scripts`) import cleanly during test collection.
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
 import subprocess
 import sys
 import os
