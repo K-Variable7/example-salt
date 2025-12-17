@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/static/style.css">
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <section class="section header-hero">
       <div class="container is-max-desktop">
         <div class="columns is-vcentered">
@@ -25,24 +26,24 @@
             <p class="subtitle">Interactive demo: enter a password (or generate one), toggle <strong>Local-only</strong> to avoid sending plaintext to the server, and explore how salting changes hashes and attack surface.</p>
           </div>
           <div class="column is-narrow">
-            <button id="generate" class="button is-light"><span class="icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span> <span>Generate</span></button>
+            <button id="generate" class="button is-light" aria-label="Generate demo password"><span class="icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span> <span>Generate</span></button>
           </div>
           <div class="column is-narrow">
-            <button id="showTutorialBtn" class="button is-light" title="Show tutorial"><span class="icon"><i class="fa-solid fa-chalkboard-user"></i></span> <span>Show tutorial</span></button>
+            <button id="showTutorialBtn" class="button is-light" title="Show tutorial" aria-controls="tutorialOverlay" aria-expanded="false"><span class="icon"><i class="fa-solid fa-chalkboard-user"></i></span> <span>Show tutorial</span></button>
           </div>
         </div>
       </div>
     </section>
 
     <section class="section">
-      <div class="container is-max-desktop">
+      <div id="main-content" role="main" class="container is-max-desktop">
         <div class="card card-demo">
           <div class="content">
             <div class="field">
               <label class="label">Password</label>
               <div class="field has-addons">
                 <div class="control is-expanded">
-                  <input id="password" class="input" type="password" placeholder="Enter a demo password" aria-describedby="showPwHelp">
+                  <input id="password" class="input" type="password" placeholder="Enter a demo password" aria-describedby="showPwHelp" aria-label="Demo password input">
                 </div>
                 <div class="control">
                   <label class="checkbox" id="showPwLabel"><input id="showPwd" type="checkbox" /> Show</label>
@@ -65,17 +66,17 @@
                 <button id="downloadPngBtn" class="button is-light">Download PNGs</button>
               </div>
               <div class="control">
-                <label class="checkbox"><input id="localOnly" type="checkbox" checked> Local-only</label>
+                <label class="checkbox"><input id="localOnly" type="checkbox" checked aria-label="Local-only toggle"> Local-only</label>
               </div>
               <div class="control">
-                <label class="checkbox"><input id="useArgonLocal" type="checkbox"> Use Argon2 (local)</label>
+                <label class="checkbox"><input id="useArgonLocal" type="checkbox" aria-label="Enable Argon2 local"> Use Argon2 (local)</label>
               </div>
 
               <div class="control">
-                <label class="checkbox"><input id="useBcryptLocal" type="checkbox"> Use bcrypt (local)</label>
+                <label class="checkbox"><input id="useBcryptLocal" type="checkbox" aria-label="Enable bcrypt local"> Use bcrypt (local)</label>
               </div>
               <div class="control">
-                <label class="checkbox"><input id="useScryptLocal" type="checkbox"> Use scrypt (local)</label>
+                <label class="checkbox"><input id="useScryptLocal" type="checkbox" aria-label="Enable scrypt local"> Use scrypt (local)</label>
               </div>
 
             </div>
@@ -191,20 +192,20 @@
           <div class="field is-grouped is-align-items-center" style="margin-top:0.5rem;">
             <div class="control">
               <label class="label">Users per password</label>
-              <input id="rainbowUsers" class="input" type="number" min="1" max="1000" value="100" style="width:6rem" />
+              <input id="rainbowUsers" class="input" type="number" min="1" max="1000" value="100" style="width:6rem" aria-label="Users per password" />
             </div>
             <div class="control" style="margin-top:1.3rem">
-              <label class="checkbox"><input id="rainbowUsePrecomputed" type="checkbox" checked> Use precomputed common-password table</label>
+              <label class="checkbox"><input id="rainbowUsePrecomputed" type="checkbox" checked aria-label="Use precomputed password table"> Use precomputed common-password table</label>
             </div>
             <div class="control" style="margin-top:1.3rem">
-              <button id="rainbowBtn" class="button is-info">Run rainbow simulator</button>
+              <button id="rainbowBtn" class="button is-info" aria-label="Run rainbow simulator">Run rainbow simulator</button>
             </div>
           </div>
 
           <div style="display:flex;align-items:center;margin-top:0.5rem;gap:0.75rem;">
             <div id="rainbowSpinner" class="loader" aria-hidden="true" style="display:none" title="Working"></div>
             <p id="rainbowStatus" class="help" style="color:#666;margin:0">Precomputed table: loading…</p>
-            <div id="rainbowSummary" style="margin-left:auto;font-weight:600;">Unsalted instant cracks: <span id="rainbowInstantCount">0</span> &nbsp; • &nbsp; Salted unique: <span id="rainbowSaltedCount">0</span></div>
+            <div id="rainbowSummary" role="status" aria-live="polite" aria-atomic="true" style="margin-left:auto;font-weight:600;">Unsalted instant cracks: <span id="rainbowInstantCount">0</span> &nbsp; • &nbsp; Salted unique: <span id="rainbowSaltedCount">0</span></div>
           </div>
           <div id="rainbowResults" style="margin-top:1rem">No simulation run yet.</div>
 +          <div style="margin-top:0.5rem;display:flex;gap:0.5rem;align-items:center;">
