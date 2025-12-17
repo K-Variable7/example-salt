@@ -211,7 +211,7 @@ async function loadScrypt() {
   _scryptLoading = true;
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/scrypt-async@2.0.3/scrypt-async.min.js';
+    s.src = 'https://cdn.jsdelivr.net/npm/scrypt-async@1.3.0/scrypt-async.min.js';
     s.onload = () => { _scryptLoading = false; if (window.scrypt) resolve(window.scrypt); else resolve(window.scrypt); };
     s.onerror = (e) => { _scryptLoading = false; reject(new Error('Failed to load scrypt-async')); };
     document.head.appendChild(s);
@@ -378,13 +378,15 @@ async function runDemo() {
             const r = Math.max(1, parseInt(scryptR.value || '8', 10));
             const p = Math.max(1, parseInt(scryptP.value || '1', 10));
             const startS = performance.now();
-            const saltBuf = hexToBuf(saltHex);
+            // Use hex salt string for scrypt-async compatibility
+            const saltHexForScrypt = saltHex;
             const dkLen = 32;
             const scryptAsync = window.scrypt;
             const derived = await new Promise((resolve, reject) => {
               try {
-                scryptAsync(pwd, saltBuf, { N: N, r: r, p: p, dkLen: dkLen }, (derivedKey) => {
-                  resolve(derivedKey);
+                // Request hex encoded output for easier parsing
+                scryptAsync(pwd, saltHexForScrypt, { N: N, r: r, p: p, dkLen: dkLen, encoding: 'hex' }, (derivedKeyHex) => {
+                  resolve(derivedKeyHex);
                 });
               } catch (err) { reject(err); }
             });
@@ -392,7 +394,9 @@ async function runDemo() {
             const scryptSec = (endS - startS) / 1000;
             kdfStatus.textContent = `scrypt computed in ${scryptSec.toFixed(2)}s (N=${N}, r=${r}, p=${p})`;
             let hex = '';
-            if (derived && derived.length) {
+            if (typeof derived === 'string' && /^[0-9a-fA-F]+$/.test(derived)) {
+              hex = derived;
+            } else if (derived && derived.length) {
               hex = bufToHex(derived instanceof Uint8Array ? derived : new Uint8Array(derived));
             }
             out.innerHTML += `<p><strong>Local scrypt (hex):</strong> <pre>${hex}</pre></p>`;
@@ -614,21 +618,25 @@ function updateCharts(crackSec, uniqueUnsalted, uniqueSalted) {
 
 // Rainbow-table simulator: load common passwords and precompute unsalted map
 async function loadCommonPasswords() {
+  const statusEl = document.getElementById('rainbowStatus');
   try {
+    if (statusEl) statusEl.textContent = 'Loading precomputed table...';
     const res = await fetch('/data/common_passwords.txt');
-    if (!res.ok) throw new Error('Failed to load common passwords');
+    if (!res.ok) throw new Error('Failed to load common passwords (http ' + res.status + ')');
     const txt = await res.text();
     commonPasswords = txt.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
     // Precompute unsalted sha256 map
     rainbowMap.clear();
-    for (const pw of commonPasswords) {
-      // Fire-and-forget: compute sha256 but don't block UI
-      sha256Hex(pw).then(h => rainbowMap.set(h, pw)).catch(e => console.error('sha err', e));
-    }
+    const promises = commonPasswords.map(pw => sha256Hex(pw).then(h => rainbowMap.set(h, pw)).catch(e => console.error('sha err', e)));
+    await Promise.all(promises);
     console.info('Loaded common passwords:', commonPasswords.length);
+    if (statusEl) statusEl.textContent = `Precomputed table loaded (${commonPasswords.length} entries)`;
+    return true;
   } catch (e) {
     console.warn('Could not load common passwords:', e);
     commonPasswords = [];
+    if (statusEl) statusEl.textContent = 'Precomputed table unavailable (using small fallback)';
+    return false;
   }
 }
 
@@ -648,43 +656,40 @@ async function runRainbowSimulator() {
   const users = Math.max(1, parseInt(document.getElementById('rainbowUsers').value || '100', 10));
   const usePre = !!document.getElementById('rainbowUsePrecomputed').checked;
   const out = document.getElementById('rainbowResults');
+  const statusEl = document.getElementById('rainbowStatus');
   btn.disabled = true;
   try {
     out.innerHTML = '<em>Running rainbow-table simulation...</em>';
-    // ensure rainbowMap loaded
+
+    // ensure rainbowMap loaded if requested
+    let loaded = true;
     if (usePre && rainbowMap.size === 0) {
-      await loadCommonPasswords();
-      // small wait for pending hashes
-      await new Promise(r => setTimeout(r, 100));
+      loaded = await loadCommonPasswords();
     }
 
-    // Simulate: for each common password, assume `users` users share it
-    // Unsalted: attacker with precomputed table can instantly map unsalted hash -> password
-    // Salted: per-user salt prevents direct table lookup; attacker would need per-salt brute force
+    // If precomputed table isn't available, fall back to a small sample list to still demonstrate the concept
+    const pwList = (usePre && loaded && commonPasswords.length) ? commonPasswords : sampleRainbow;
+    if (statusEl) statusEl.textContent = usePre && !loaded ? 'Using small fallback password list' : (usePre ? `Running with precomputed table (${pwList.length} entries)` : `Running with sample list (${pwList.length} entries)`);
 
-    const totalPasswords = commonPasswords.length || sampleRainbow.length;
+    const totalPasswords = pwList.length;
     const totalUsers = totalPasswords * users;
 
-    // Count instantly cracked users under unsalted storage: any password present in rainbowMap
     let crackedUnsaltedUsers = 0;
-    let crackedSaltedUsers = 0; // expected to be 0 for precomputed-only attacker
+    let crackedSaltedUsers = 0;
 
-    const tableMap = usePre ? rainbowMap : new Map();
-    const pwList = commonPasswords.length ? commonPasswords : sampleRainbow;
+    const tableMap = (usePre && loaded) ? rainbowMap : new Map();
 
     for (const pw of pwList) {
       const h = await sha256Hex(pw);
       if (tableMap.has(h)) {
-        crackedUnsaltedUsers += users; // all users with this password would be cracked via rainbow table
+        crackedUnsaltedUsers += users;
       }
-      // salted: assume attacker has no per-salt table; so none cracked instantly
     }
 
-    // Update UI
     out.innerHTML = `<p>Total simulated users: <strong>${totalUsers}</strong></p>
       <p><strong style="color:red">Unsalted (instant cracks):</strong> ${crackedUnsaltedUsers}</p>
       <p><strong style="color:green">Salted (instant cracks using precomputed table):</strong> ${crackedSaltedUsers}</p>
-      <p><small>${usePre ? 'Using precomputed list of common passwords.' : 'Not using precomputed table (no instant cracks).'}</small></p>`;
+      <p><small>${usePre ? (loaded ? 'Using precomputed list of common passwords.' : 'Precomputed list failed to load — using small fallback list.') : 'Not using precomputed table (no instant cracks).'} </small></p>`;
 
     if (!rainbowChart) initRainbowChart();
     rainbowChart.data.datasets[0].data = [crackedUnsaltedUsers];
@@ -692,6 +697,7 @@ async function runRainbowSimulator() {
     rainbowChart.update();
   } catch (e) {
     out.innerHTML = `<p style="color:orange">Simulation failed: ${e}</p>`;
+    if (statusEl) statusEl.textContent = 'Simulation failed';
   } finally {
     btn.disabled = false;
   }
