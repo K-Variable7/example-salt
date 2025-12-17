@@ -67,6 +67,11 @@ function generatePassword(len = 16) {
 // Demo data
 const sampleRainbow = ['password','123456','qwerty','letmein','12345678','password1'];
 
+// Rainbow-table simulator data (loaded from data/common_passwords.txt)
+let commonPasswords = [];
+let rainbowMap = new Map(); // unsalted sha256 -> password
+let rainbowChart = null;
+
 // UI wiring
 const passwordInput = document.getElementById('password');
 const showPwd = document.getElementById('showPwd');
@@ -507,6 +512,98 @@ function updateCharts(crackSec, uniqueUnsalted, uniqueSalted) {
   collisionChart.data.datasets[0].data = [uniqueUnsalted, uniqueSalted];
   collisionChart.update();
 }
+
+// Rainbow-table simulator: load common passwords and precompute unsalted map
+async function loadCommonPasswords() {
+  try {
+    const res = await fetch('/data/common_passwords.txt');
+    if (!res.ok) throw new Error('Failed to load common passwords');
+    const txt = await res.text();
+    commonPasswords = txt.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    // Precompute unsalted sha256 map
+    rainbowMap.clear();
+    for (const pw of commonPasswords) {
+      // Fire-and-forget: compute sha256 but don't block UI
+      sha256Hex(pw).then(h => rainbowMap.set(h, pw)).catch(e => console.error('sha err', e));
+    }
+    console.info('Loaded common passwords:', commonPasswords.length);
+  } catch (e) {
+    console.warn('Could not load common passwords:', e);
+    commonPasswords = [];
+  }
+}
+
+function initRainbowChart() {
+  const el = document.getElementById('rainbowChart');
+  if (!el) return;
+  const ctx = el.getContext('2d');
+  rainbowChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: ['Cracked users'], datasets: [ { label: 'Unsalted (instant)', data: [0], backgroundColor: ['#e15759'] }, { label: 'Salted (needs per-salt brute)', data: [0], backgroundColor: ['#59a14f'] } ] },
+    options: { indexAxis: 'y', scales: { x: { beginAtZero: true } } }
+  });
+}
+
+async function runRainbowSimulator() {
+  const btn = document.getElementById('rainbowBtn');
+  const users = Math.max(1, parseInt(document.getElementById('rainbowUsers').value || '100', 10));
+  const usePre = !!document.getElementById('rainbowUsePrecomputed').checked;
+  const out = document.getElementById('rainbowResults');
+  btn.disabled = true;
+  try {
+    out.innerHTML = '<em>Running rainbow-table simulation...</em>';
+    // ensure rainbowMap loaded
+    if (usePre && rainbowMap.size === 0) {
+      await loadCommonPasswords();
+      // small wait for pending hashes
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    // Simulate: for each common password, assume `users` users share it
+    // Unsalted: attacker with precomputed table can instantly map unsalted hash -> password
+    // Salted: per-user salt prevents direct table lookup; attacker would need per-salt brute force
+
+    const totalPasswords = commonPasswords.length || sampleRainbow.length;
+    const totalUsers = totalPasswords * users;
+
+    // Count instantly cracked users under unsalted storage: any password present in rainbowMap
+    let crackedUnsaltedUsers = 0;
+    let crackedSaltedUsers = 0; // expected to be 0 for precomputed-only attacker
+
+    const tableMap = usePre ? rainbowMap : new Map();
+    const pwList = commonPasswords.length ? commonPasswords : sampleRainbow;
+
+    for (const pw of pwList) {
+      const h = await sha256Hex(pw);
+      if (tableMap.has(h)) {
+        crackedUnsaltedUsers += users; // all users with this password would be cracked via rainbow table
+      }
+      // salted: assume attacker has no per-salt table; so none cracked instantly
+    }
+
+    // Update UI
+    out.innerHTML = `<p>Total simulated users: <strong>${totalUsers}</strong></p>
+      <p><strong style="color:red">Unsalted (instant cracks):</strong> ${crackedUnsaltedUsers}</p>
+      <p><strong style="color:green">Salted (instant cracks using precomputed table):</strong> ${crackedSaltedUsers}</p>
+      <p><small>${usePre ? 'Using precomputed list of common passwords.' : 'Not using precomputed table (no instant cracks).'}</small></p>`;
+
+    if (!rainbowChart) initRainbowChart();
+    rainbowChart.data.datasets[0].data = [crackedUnsaltedUsers];
+    rainbowChart.data.datasets[1].data = [crackedSaltedUsers];
+    rainbowChart.update();
+  } catch (e) {
+    out.innerHTML = `<p style="color:orange">Simulation failed: ${e}</p>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Wire simulator button
+const rainbowBtn = document.getElementById('rainbowBtn');
+if (rainbowBtn) rainbowBtn.addEventListener('click', (e) => { e.preventDefault(); runRainbowSimulator(); });
+
+// Load common passwords on startup
+loadCommonPasswords();
 
 // Also wire in a quick 'paste-list' capability if present (maintain backwards compatibility)
 const oldForm = document.getElementById('hashForm');

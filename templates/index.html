@@ -108,6 +108,30 @@
           </div>
         </div>
 
+        <section class="box" style="margin-top:1rem">
+          <h2 class="title is-5">Rainbow-table simulator</h2>
+          <p class="help">Precomputed unsalted hashes for a small list of common passwords are used to demonstrate how unsalted hashes can be cracked instantly via a rainbow table, while salted hashes remain unique per user.</p>
+
+          <div class="field is-grouped is-align-items-center" style="margin-top:0.5rem;">
+            <div class="control">
+              <label class="label">Users per password</label>
+              <input id="rainbowUsers" class="input" type="number" min="1" max="1000" value="100" style="width:6rem" />
+            </div>
+            <div class="control" style="margin-top:1.3rem">
+              <label class="checkbox"><input id="rainbowUsePrecomputed" type="checkbox" checked> Use precomputed common-password table</label>
+            </div>
+            <div class="control" style="margin-top:1.3rem">
+              <button id="rainbowBtn" class="button is-info">Run rainbow simulator</button>
+            </div>
+          </div>
+
+          <div id="rainbowResults" style="margin-top:1rem">No simulation run yet.</div>
+
+          <div style="margin-top:1rem">
+            <canvas id="rainbowChart" height="120"></canvas>
+          </div>
+        </section>
+
         <div style="margin-top:0.5rem">
           <small style="color:#666">Tip: Don't use real passwords — use generated or test passwords.</small>
         </div>
