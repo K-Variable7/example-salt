@@ -1,124 +1,148 @@
 # Salt vs. No-Salt Demonstrator
-A quick demo to explore password hashing, salting, and KDFs.  
 
 [![CI](https://github.com/K-Variable7/example-salt/actions/workflows/pytest.yml/badge.svg)](https://github.com/K-Variable7/example-salt/actions/workflows/pytest.yml)
-A small demo web app that shows the difference between unsalted and salted password hashing. Intended for educational and local use only.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Quick start
+An interactive web application demonstrating the importance of password salting and key derivation functions (KDFs) for secure hashing. Explore how unsalted vs. salted hashes impact security, visualize crack times, and simulate rainbow table attacks.
 
-1. Create a virtual environment and install deps:
+![Demo Screenshot](demo.gif)
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+## Features
 
-2. Run the app:
+- **Interactive Hashing Demo**: Enter passwords and see unsalted (SHA-256) vs. salted hashes in real-time.
+- **Local-Only Mode**: Keep all computations client-side for privacy—no plaintext sent to server.
+- **KDF Support**: Experiment with Argon2, bcrypt, and scrypt locally in the browser.
+- **Rainbow Table Simulator**: Precomputed unsalted hashes demonstrate instant cracking vulnerabilities.
+- **Visualizations**: Charts for estimated crack times and collision counts using Chart.js.
+- **Accessibility**: WCAG 2.1 AA compliant with keyboard navigation and screen reader support.
+- **Export Options**: Download demo results as JSON, CSV, or PNG charts.
 
-```bash
-python app.py
-```
+## Quick Start
 
-3. Open http://127.0.0.1:5000 and paste a few passwords to see the hashes.
+### Prerequisites
+- Python 3.8+
+- Virtual environment (recommended)
 
-## Security notes
-- Use only synthetic or permissioned datasets. Do not upload real leaked passwords.
-- The demo shows both insecure SHA-256 (unsalted) and salted variants for demonstration. For production, use Argon2/bcrypt/scrypt via well-tested libraries.
-- **Local-only mode:** The interactive demo supports a "Local-only" toggle (checked by default). When enabled, all hashing and analysis happen in the browser and **no plaintext is sent to the server**. This is recommended for privacy and demos.
+### Installation
 
-## Next steps
-- Add visualizations (crack-time comparisons) — now implemented using Chart.js for crack-time and collision charts
-- Add tests and CI (pytest + a GitHub Actions workflow added)
-- Visual polish: improved styling (Bulma + custom CSS), icons (Font Awesome), logo, button animations, and result fade-ins
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/K-Variable7/example-salt.git
+   cd example-salt
+   ```
 
-### New features (added)
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
 
-- **Rainbow-table simulator:** A client-side simulator (under the demo UI) precomputes unsalted hashes for a small, included list of common passwords and shows how unsalted hashes can be cracked instantly using a precomputed table while salted hashes remain unique per user. Use the **"Rainbow-table simulator"** panel to configure users-per-password and toggle the precomputed table.
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-- **Local KDF toggles (Argon2 / bcrypt / scrypt):** You can now choose to run Argon2, bcrypt, or scrypt locally in the browser to demonstrate per-guess cost. These KDFs are *lazy-loaded* only when selected. Beware that high resource parameters may make your browser unresponsive — the UI shows warnings and timing info when you run them.
+4. Run the application:
+   ```bash
+   python app.py
+   ```
 
-If you want a compact demonstration, enable "Local-only" and pick a KDF to see how the estimated crack time increases with work factor and measured compute time.
+5. Open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser.
 
-## KDF tuning — quick how-to 🔧
+## Usage
 
-This short guide helps choose demo-friendly KDF parameters (safe for local demos, not production recommendations):
+- **Generate a Password**: Click "Generate" for a demo password.
+- **Run Demo**: Click "Run Demo" to compute hashes and view results.
+- **Toggle Local-Only**: Enable for client-side hashing (recommended for privacy).
+- **Enable KDFs**: Select Argon2, bcrypt, or scrypt for advanced demonstrations.
+- **Rainbow Simulator**: Adjust users per password and run simulations.
 
-- **Argon2 (local):** `time` (iterations) and `mem` (KB) increase cost. For demos use `time=1..3` and `mem=32768..131072` (32–128 MB). Beware: high `mem` can freeze browsers; a warning modal appears when memory is large.
-- **bcrypt (local):** `rounds` (cost) — each additional round ~doubles compute. Demo-friendly: `8..12` for fast demos; `10` is a reasonable default for demos.
-- **scrypt (local):** `N`, `r`, `p` control work/parallelism. Demo defaults: `N=16384`, `r=8`, `p=1`; reduce to `N=1024` and `r=1` for CI/test runs.
+### Security Notes
+- **Educational Use Only**: Designed for learning; do not use real passwords.
+- **Local-Only Recommended**: Prevents plaintext transmission to the server.
+- **Production Standards**: Use Argon2, bcrypt, or scrypt with proper parameters for real applications.
 
-How to interpret demo timings:
-- The demo measures per-hash time (in seconds) and multiplies by guesses to estimate total crack time (i.e., guesses = 2^(entropy bits)). Use this to show how raising cost parameters increases the estimated crack time dramatically.
+## KDF Tuning Guide
 
-⚠️ Reminder: **Do not use real passwords** — the demo is for educational purposes only.
+### Argon2 (Recommended)
+- **Time (iterations)**: 1–3 for demos; higher increases compute time.
+- **Memory (KB)**: 32,768–131,072 (32–128 MB); large values may freeze browsers.
+- **Parallelism**: 1–4 lanes; improves throughput on multi-core systems.
 
-### Running tests locally
+### bcrypt
+- **Rounds**: 8–12 for demos; each round doubles compute time.
+- **Default**: 10 rounds for balanced demo performance.
 
-Install dev deps: `pip install -r requirements.txt` (includes `pytest` and Playwright tooling).
+### scrypt
+- **N (work factor)**: 16,384 for demos; reduce to 1,024 for fast CI runs.
+- **r (block size)**: 8; affects memory usage.
+- **p (parallelization)**: 1; increases parallelism.
 
-Run tests:
+## Testing
 
+### Unit & Integration Tests
 ```bash
 pytest -q
 ```
 
-E2E (Playwright) tests
+### End-to-End Tests
+1. Install Playwright browsers:
+   ```bash
+   python -m playwright install
+   ```
 
-Install Playwright browsers locally (required for E2E tests):
+2. Run E2E tests:
+   ```bash
+   pytest tests/e2e -q
+   ```
 
-```bash
-python -m playwright install
-```
+## Simulation Script
 
-Run E2E tests:
-
-```bash
-pytest tests/e2e -q
-```
-
-CI artifacts & privacy
-
-- For privacy and to limit exposure, the CI job does **not** record or upload full Playwright videos or traces.
-- On E2E failures the workflow will collect a best-effort GIF (via `scripts/record_screenshots.py`) and a **redacted** `server.log` (sensitive headers and common secret fields are redacted). Traces are disabled and full videos are not uploaded.
-- Artifact uploads are only performed for non-forked PRs (to avoid exposing data from external contributors) and uploaded artifacts are retained for **7 days**.
-
-Recording a demo video (for GIF)
-
-You can record a short demo using Playwright and convert the resulting MP4 to GIF via ffmpeg:
-
-1. Record mp4 using the helper script:
-
-```bash
-python scripts/record_demo.py --out videos/demo.mp4 --duration 8
-```
-
-2. Convert to GIF (requires ffmpeg):
-
-```bash
-ffmpeg -ss 0 -t 8 -i videos/demo.mp4 -vf "fps=15,scale=640:-1:flags=lanczos" -loop 0 demo.gif
-```
-
-Below is a short demo of the app (Local-only mode). **Privacy note:** the GIF uses synthetic demo passwords and may show them visibly — do not record or commit real passwords. If you prefer, regenerate the GIF with placeholder text.
-
-**Preview:** click the image to open the MP4 preview (GitHub will show it in a player on the MP4 page).
-
-[![Demo preview (click to play)](demo_poster.png)](videos/demo_preview.mp4)
-
-
-![Demo of Salt vs No-Salt Demonstrator](demo.gif)
-
-- Add Argon2 WASM client-side option for stronger local KDF demonstration (implemented). The demo uses a lazy-loaded CDN build of `argon2-browser` when you enable "Use Argon2 (local)" in Local-only mode.
-- Added a confirmation modal which warns and requires consent for high Argon2 resource settings (e.g., memory > 256MB).
-- Added an export button that downloads the current demo output and chart data as a JSON file.
-
-## Simulation script
-A CLI helper is available at `scripts/simulate.py`.
-
-Example usage:
+Run CLI simulations for batch analysis:
 
 ```bash
 python scripts/simulate.py --input data/sample_passwords.txt --users 100 --out data/sim_report.json --pretty
 ```
 
-This will compute unsalted vs salted behavior and write a JSON report to `data/sim_report.json`.
+## Contributing
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature-name`.
+3. Make changes and add tests.
+4. Run tests: `pytest`.
+5. Commit and push: `git push origin feature-name`.
+6. Open a pull request.
+
+### Development Setup
+- Install dev dependencies: `pip install -r requirements.txt` (includes pytest, Playwright).
+- Follow the [Contributing Guide](CONTRIBUTING.md) for coding standards.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Deployment
+
+### Local Development
+The app runs on Flask. Follow the Quick Start above.
+
+### Production Deployment
+For live deployment, consider platforms like Heroku, Render, or Railway.
+
+#### Heroku Example
+1. Create a `Procfile`:
+   ```
+   web: python app.py
+   ```
+
+2. Set environment variables (if needed).
+
+3. Deploy via Heroku CLI or GitHub integration.
+
+#### Render Example
+- Connect your GitHub repo.
+- Set build command: `pip install -r requirements.txt`
+- Set start command: `python app.py`
+- Add environment variable: `PORT=10000` (or as configured).
+
+Ensure `app.py` binds to `0.0.0.0` and uses `PORT` from env.

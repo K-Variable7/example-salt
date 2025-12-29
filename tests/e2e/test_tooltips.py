@@ -9,5 +9,5 @@ def test_kdf_tooltips_show_on_focus(page):
     assert tooltip_host.count() == 1
     tooltip_host.focus()
     # The tooltip text should become visible
-    page.wait_for_selector('#tip-argonTime', timeout=2000)
-    assert page.is_visible('#tip-argonTime')
+    page.wait_for_selector("#tip-argonTime", timeout=2000)
+    assert page.is_visible("#tip-argonTime")

@@ -111,8 +111,6 @@ jobs:
             sed -E 's/(password["'\ ]*[:= ]?)[^"<>]*/\1[REDACTED]/Ig' tests/e2e/report.xml > artifacts/report.xml || cp tests/e2e/report.xml artifacts/report.xml || true
           fi
 
-
-
         continue-on-error: true
 
       - name: Upload E2E artifacts

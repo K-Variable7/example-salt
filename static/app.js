@@ -80,6 +80,43 @@ function initTooltips() {
 
 // Run tooltip init after DOM ready (script loaded at end of body)
 try { initTooltips(); } catch (e) { /* non-fatal */ }
+try { initTitleFlipDigits(); } catch (e) { /* non-fatal */ }
+
+// Title hover: per-letter flip to a digit, then flip back (staggered) so text always returns
+function initTitleFlipDigits() {
+  const container = document.querySelector('.title-flip');
+  if (!container) return;
+  const spans = Array.from(container.querySelectorAll('.title-chars span'));
+  if (!spans.length) return;
+
+  spans.forEach(span => { span.dataset.char = span.textContent; });
+  const digits = ['0','1','2','3','4','5','6','7','8','9'];
+  let running = false;
+
+  const runFlip = () => {
+    if (running) return;
+    running = true;
+    spans.forEach((span, idx) => {
+      const delay = idx * 40;
+      setTimeout(() => {
+        const digit = digits[Math.floor(Math.random() * digits.length)];
+        span.textContent = digit;
+        span.classList.add('flip-digit');
+        setTimeout(() => {
+          span.textContent = span.dataset.char || span.textContent;
+          span.classList.add('flip-digit');
+          setTimeout(() => span.classList.remove('flip-digit'), 180);
+        }, 140);
+      }, delay);
+    });
+    // Reset running after the stagger completes
+    const total = spans.length * 40 + 400;
+    setTimeout(() => { running = false; spans.forEach(s => s.classList.remove('flip-digit')); }, total);
+  };
+
+  container.addEventListener('mouseenter', runFlip);
+  container.addEventListener('focusin', runFlip);
+}
 
 // Tutorial overlay behavior: show on first run, persist dismissal in localStorage
 const TUTORIAL_KEY = 'saltDemo_tutorial_dismissed';
@@ -886,3 +923,21 @@ if (oldForm) {
 
 // Init
 updateStrength();
+
+// Typing effect for subtitle
+document.addEventListener('DOMContentLoaded', function() {
+  const subtitle = document.querySelector('.subtitle');
+  if (subtitle) {
+    const text = subtitle.innerHTML;
+    subtitle.innerHTML = '';
+    let i = 0;
+    const typeWriter = () => {
+      if (i < text.length) {
+        subtitle.innerHTML += text.charAt(i);
+        i++;
+        setTimeout(typeWriter, 30);
+      }
+    };
+    setTimeout(typeWriter, 1000); // Delay start
+  }
+});
