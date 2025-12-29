@@ -118,6 +118,20 @@ body {
 }
 #demoResults pre { background: rgba(0,0,0,0.3); padding:0.4rem; border-radius:4px }
 footer { margin-top:2rem; color: var(--muted); font-size:0.9rem }
+.site-footer {
+  margin-top: 2rem;
+  padding: 1rem 0;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text);
+  border-top: 1px solid rgba(255,255,255,0.12);
+}
+
+.site-footer .heart { color: #ff6b81; text-shadow: 0 0 8px rgba(255,107,129,0.4); }
+.site-footer .btc code { background: rgba(0,0,0,0.25); padding: 0.2rem 0.35rem; border-radius: 6px; color: #a7f0ff; }
 /* Small adjustments for the charts area */
 canvas { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius:12px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
